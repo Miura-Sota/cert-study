@@ -2,8 +2,12 @@
 
 import {
   type User,
+  EmailAuthProvider,
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -19,6 +23,9 @@ type AuthContextValue = {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  reauthWithPassword: (password: string) => Promise<void>;
+  reauthWithGoogle: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -33,6 +40,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   "auth/weak-password": "パスワードは6文字以上で入力してください。",
   "auth/popup-closed-by-user": "ログインがキャンセルされました。",
   "auth/network-request-failed": "通信に失敗しました。接続を確認してください。",
+  "auth/requires-recent-login": "セキュリティのため、再度ログイン確認が必要です。",
+  "auth/wrong-password-or-recent-login": "パスワードが正しくないか、再ログインが必要です。",
 };
 
 export function toAuthErrorMessage(err: unknown): string {
@@ -69,6 +78,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     async logOut() {
       await signOut(getFirebaseAuth());
+    },
+    async deleteAccount() {
+      const current = getFirebaseAuth().currentUser;
+      if (!current) throw new Error("ログインしていません。");
+      await deleteUser(current);
+    },
+    async reauthWithPassword(password) {
+      const current = getFirebaseAuth().currentUser;
+      if (!current?.email) throw new Error("ログインしていません。");
+      const credential = EmailAuthProvider.credential(current.email, password);
+      await reauthenticateWithCredential(current, credential);
+    },
+    async reauthWithGoogle() {
+      const current = getFirebaseAuth().currentUser;
+      if (!current) throw new Error("ログインしていません。");
+      await reauthenticateWithPopup(current, googleProvider);
     },
   };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
 import { LoginScreen } from "@/components/auth/LoginScreen";
 import { useAuth } from "@/lib/auth-context";
 import { ROADMAPS } from "@/lib/data";
@@ -25,6 +26,7 @@ export default function CertStudy() {
   const [loading, setLoading] = useState(true);
   const [saveErr, setSaveErr] = useState("");
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -89,13 +91,20 @@ export default function CertStudy() {
             <h1>資格ロードマップ</h1>
             <p>働きながら資格を取るための、計画・教材・記録がつながるノート。</p>
           </div>
-          <div className="rm-auth-user">
-            <span>{user.email ?? user.displayName ?? "ゲスト"}</span>
-            <button className="rm-btn quiet sm" onClick={() => logOut()}>ログアウト</button>
+          <div className="rm-head-tools">
+            <div className="rm-auth-user">
+              <span title={user.email ?? user.displayName ?? undefined}>
+                {user.email ?? user.displayName ?? "ゲスト"}
+              </span>
+              <button className="rm-btn quiet sm" onClick={() => logOut()}>ログアウト</button>
+              <button className="rm-btn quiet sm rm-danger" onClick={() => setDeleteOpen(true)}>
+                アカウントを削除
+              </button>
+            </div>
+            <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>
+              使い方を見る
+            </button>
           </div>
-          <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>
-            使い方を見る
-          </button>
         </header>
 
         <nav className="rm-tabs">
@@ -122,6 +131,7 @@ export default function CertStudy() {
       </footer>
 
       <Tutorial state={state} tab={tab} setTab={setTab} open={tutorialOpen} setOpen={setTutorialOpen} />
+      <DeleteAccountDialog open={deleteOpen} setOpen={setDeleteOpen} />
     </div>
   );
 }
