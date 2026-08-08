@@ -1,11 +1,11 @@
 import { useMemo, type Dispatch, type SetStateAction } from "react";
 import { CERTS, ROADMAPS, kindOf } from "@/lib/data";
-import type { AppState, Roadmap } from "@/lib/types";
+import type { AppState, AppTab, Roadmap } from "@/lib/types";
 import { addDays, fmtMD, mondayOf, num, parseISO } from "@/lib/utils";
 import { Hero } from "./Hero";
 import { WeekChart } from "./charts";
 
-export function HomeTab({ state, rm, go }: { state: AppState; setState: Dispatch<SetStateAction<AppState>>; rm: Roadmap; go: (tab: string) => void }) {
+export function HomeTab({ state, rm, go }: { state: AppState; setState: Dispatch<SetStateAction<AppState>>; rm: Roadmap; go: (tab: AppTab) => void }) {
   const { logs, target } = state;
   const weeks = useMemo(() => {
     const base = mondayOf(new Date());
@@ -19,7 +19,7 @@ export function HomeTab({ state, rm, go }: { state: AppState; setState: Dispatch
 
   return (
     <>
-      <section className="rm-sec"><Hero state={state} rm={rm} /></section>
+      <section className="rm-sec"><Hero state={state} rm={rm} onSetGoal={() => go("map")} /></section>
 
       <section className="rm-sec">
         <h2>週ごとの学習時間<span className="r"><button className="rm-btn sm" onClick={() => go("log")}>記録する</button></span></h2>

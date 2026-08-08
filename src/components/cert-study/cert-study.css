@@ -237,3 +237,26 @@
   .rm-stats{gap:16px;}
   .rm-hero{gap:14px;}
 }
+
+/* tutorial guide */
+.rm-tut{position:fixed;bottom:18px;right:18px;width:360px;max-width:calc(100vw - 36px);
+  background:var(--ink);color:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 8px 28px rgba(0,0,0,.28);z-index:40;}
+.rm-tut-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.rm-tut-step{font-family:'Roboto Mono',monospace;font-size:11px;color:#B8B6B2;}
+.rm-tut-close{margin-left:auto;appearance:none;background:none;border:none;color:#B8B6B2;cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;}
+.rm-tut-close:hover{color:#fff;}
+.rm-tut h3{font-size:14.5px;font-weight:700;margin:0 0 6px;}
+.rm-tut p{font-size:12.5px;line-height:1.6;color:#E4E2DE;margin:0 0 12px;}
+.rm-tut-done{color:#8FE3BE;font-size:12px;margin:-6px 0 12px;}
+.rm-tut-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.rm-tut-btn{appearance:none;font:inherit;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.28);
+  background:transparent;color:#fff;cursor:pointer;}
+.rm-tut-btn:hover{border-color:#fff;}
+.rm-tut-btn.pri{background:#fff;color:var(--ink);border-color:#fff;font-weight:700;}
+.rm-tut-btn.pri:hover{filter:brightness(.95);}
+.rm-tut-btn.quiet{border-color:transparent;color:#B8B6B2;padding:6px 4px;}
+.rm-tut-btn.quiet:hover{color:#fff;}
+
+@media (max-width:520px){
+  .rm-tut{left:14px;right:14px;bottom:14px;width:auto;}
+}

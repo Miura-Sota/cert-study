@@ -6,7 +6,7 @@ import { Hero } from "./Hero";
 import { NumInput } from "./NumInput";
 import { WeekChart, ScoreChart } from "./charts";
 
-export function LogTab({ state, setState, rm, goMat }: { state: AppState; setState: Dispatch<SetStateAction<AppState>>; rm: Roadmap; goMat: () => void }) {
+export function LogTab({ state, setState, rm, goMat, goMap }: { state: AppState; setState: Dispatch<SetStateAction<AppState>>; rm: Roadmap; goMat: () => void; goMap: () => void }) {
   const { logs, scores, materials, target } = state;
   const [prevTargetCertId, setPrevTargetCertId] = useState(target.certId);
   const [form, setForm] = useState({ date: todayISO(), amount: 60, unit: "min", certId: target.certId || "AWS_SAA", materialId: "", progress: 0, topic: "", note: "" });
@@ -45,7 +45,7 @@ export function LogTab({ state, setState, rm, goMat }: { state: AppState; setSta
 
   return (
     <>
-      <section className="rm-sec"><Hero state={state} rm={rm} /></section>
+      <section className="rm-sec"><Hero state={state} rm={rm} onSetGoal={goMap} /></section>
 
       <section className="rm-sec">
         <h2>記録する</h2>

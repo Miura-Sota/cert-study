@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { ROADMAPS } from "@/lib/data";
 import { storage } from "@/lib/storage";
-import type { AppState } from "@/lib/types";
+import { TUTORIAL_KEY } from "@/lib/tutorial";
+import type { AppState, AppTab } from "@/lib/types";
 import { DEFAULT_STATE } from "@/lib/utils";
 import "./cert-study.css";
 import { HomeTab } from "./HomeTab";
@@ -11,16 +12,16 @@ import { MapTab } from "./MapTab";
 import { PlanTab } from "./PlanTab";
 import { MaterialTab } from "./MaterialTab";
 import { LogTab } from "./LogTab";
+import { Tutorial } from "./Tutorial";
 
 const KEY = "certstudy:v1";
 
-type Tab = "home" | "map" | "plan" | "mat" | "log";
-
 export default function CertStudy() {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
-  const [tab, setTab] = useState<Tab>("home");
+  const [tab, setTab] = useState<AppTab>("home");
   const [loading, setLoading] = useState(true);
   const [saveErr, setSaveErr] = useState("");
+  const [tutorialOpen, setTutorialOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -30,6 +31,12 @@ export default function CertStudy() {
           const v = JSON.parse(r.value);
           setState({ ...DEFAULT_STATE, ...v, target: { ...DEFAULT_STATE.target, ...(v.target || {}) } });
         }
+      } catch {
+        /* 初回 */
+      }
+      try {
+        const seen = await storage.get(TUTORIAL_KEY);
+        if (!seen) setTutorialOpen(true);
       } catch {
         /* 初回 */
       }
@@ -67,21 +74,24 @@ export default function CertStudy() {
             <h1>資格ロードマップ</h1>
             <p>働きながら資格を取るための、計画・教材・記録がつながるノート。</p>
           </div>
+          <button className="rm-btn quiet sm" style={{ marginLeft: "auto" }} onClick={() => setTutorialOpen(true)}>
+            使い方を見る
+          </button>
         </header>
 
         <nav className="rm-tabs">
-          {([["home", "ホーム"], ["map", "ロードマップ"], ["plan", "計画"], ["mat", "教材"], ["log", "記録"]] as [Tab, string][]).map(([k, v]) => (
+          {([["home", "ホーム"], ["map", "ロードマップ"], ["plan", "計画"], ["mat", "教材"], ["log", "記録"]] as [AppTab, string][]).map(([k, v]) => (
             <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{v}</button>
           ))}
         </nav>
 
         {saveErr && <p className="rm-note rm-bad" style={{ marginTop: 12 }}>{saveErr}</p>}
 
-        {tab === "home" && <HomeTab state={state} setState={setState} rm={rm} go={(t) => setTab(t as Tab)} />}
+        {tab === "home" && <HomeTab state={state} setState={setState} rm={rm} go={setTab} />}
         {tab === "map" && <MapTab state={state} setState={setState} rm={rm} goPlan={() => setTab("plan")} />}
         {tab === "plan" && <PlanTab state={state} setState={setState} rm={rm} goMap={() => setTab("map")} />}
         {tab === "mat" && <MaterialTab state={state} setState={setState} />}
-        {tab === "log" && <LogTab state={state} setState={setState} rm={rm} goMat={() => setTab("mat")} />}
+        {tab === "log" && <LogTab state={state} setState={setState} rm={rm} goMat={() => setTab("mat")} goMap={() => setTab("map")} />}
       </div>
 
       <footer className="rm-foot">
@@ -91,6 +101,8 @@ export default function CertStudy() {
           記録をすべて消す
         </button>
       </footer>
+
+      <Tutorial state={state} tab={tab} setTab={setTab} open={tutorialOpen} setOpen={setTutorialOpen} />
     </div>
   );
 }

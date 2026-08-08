@@ -120,6 +120,8 @@ export type AppState = {
   scores: ScoreEntry[];
 };
 
+export type AppTab = "home" | "map" | "plan" | "mat" | "log";
+
 export type Estimate = {
   base: number;
   expFactor: number;

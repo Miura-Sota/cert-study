@@ -3,7 +3,7 @@ import type { AppState, Roadmap } from "@/lib/types";
 import { estimate, mondayOf, num, parseISO, streakOf, todayISO, daysBetween } from "@/lib/utils";
 import { Ring } from "./Ring";
 
-export function Hero({ state, rm }: { state: AppState; rm: Roadmap }) {
+export function Hero({ state, rm, onSetGoal }: { state: AppState; rm: Roadmap; onSetGoal?: () => void }) {
   const { target, logs } = state;
   const cert = CERTS[target.certId];
   const est = cert ? estimate(target.certId, state) : null;
@@ -20,6 +20,11 @@ export function Hero({ state, rm }: { state: AppState; rm: Roadmap }) {
           <div className="rm-hero-tag">目標が未設定</div>
           <div className="rm-hero-nm">まずは次に取る資格を決めましょう</div>
           <div className="rm-hero-sub">ロードマップから選ぶと、ここに残り日数と進捗が出ます。</div>
+          {onSetGoal && (
+            <button className="rm-btn pri sm" style={{ marginTop: 12 }} onClick={onSetGoal}>
+              ロードマップで目標を選ぶ
+            </button>
+          )}
         </div>
       </div>
     );
