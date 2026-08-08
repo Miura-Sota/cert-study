@@ -8,10 +8,13 @@ import { ROADMAPS } from "@/lib/data";
 import { storage } from "@/lib/storage";
 import { TUTORIAL_KEY } from "@/lib/tutorial";
 import type { AppState, AppTab } from "@/lib/types";
-import { DEFAULT_STATE } from "@/lib/utils";
+import { useCloudSync } from "@/lib/use-cloud-sync";
+import { DEFAULT_STATE, normalizeState } from "@/lib/utils";
 import "./cert-study.css";
 import { AccountMenu } from "./AccountMenu";
+import { BackupPrompt } from "./BackupPrompt";
 import { ContactDialog } from "./ContactDialog";
+import { SyncConflictDialog } from "./SyncConflictDialog";
 import { HomeTab } from "./HomeTab";
 import { MapTab } from "./MapTab";
 import { PlanTab } from "./PlanTab";
@@ -37,8 +40,7 @@ export default function CertStudy() {
       try {
         const r = await storage.get(KEY);
         if (r && r.value) {
-          const v = JSON.parse(r.value);
-          setState({ ...DEFAULT_STATE, ...v, target: { ...DEFAULT_STATE.target, ...(v.target || {}) } });
+          setState(normalizeState(JSON.parse(r.value)));
         }
       } catch {
         /* 初回 */
@@ -64,6 +66,8 @@ export default function CertStudy() {
       }
     })();
   }, [state, loading]);
+
+  const sync = useCloudSync({ state, setState, ready: !loading });
 
   const rm = ROADMAPS.find((r) => r.id === state.goal) || ROADMAPS[0];
 
@@ -95,7 +99,13 @@ export default function CertStudy() {
             <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>
               使い方を見る
             </button>
-            <AccountMenu onDeleteAccount={() => setDeleteOpen(true)} onContact={() => setContactOpen(true)} onLogin={() => setLoginOpen(true)} />
+            <AccountMenu
+              onDeleteAccount={() => setDeleteOpen(true)}
+              onContact={() => setContactOpen(true)}
+              onLogin={() => setLoginOpen(true)}
+              syncStatus={sync.status}
+              lastSyncedMs={sync.lastSyncedMs}
+            />
           </div>
         </header>
 
@@ -106,6 +116,21 @@ export default function CertStudy() {
         </nav>
 
         {saveErr && <p className="rm-note rm-bad" style={{ marginTop: 12 }}>{saveErr}</p>}
+
+        {sync.status === "offline" && (
+          <p className="rm-note rm-bad" style={{ marginTop: 12 }}>
+            クラウドと同期できていません。記録はこの端末に保存されています。通信が戻ると自動で同期します。
+          </p>
+        )}
+
+        {sync.notice && (
+          <p className="rm-note" style={{ marginTop: 12 }}>
+            {sync.notice}
+            <button className="rm-btn quiet sm" style={{ marginLeft: 8 }} onClick={sync.dismissNotice}>閉じる</button>
+          </p>
+        )}
+
+        {tab === "home" && <BackupPrompt state={state} onLogin={() => setLoginOpen(true)} />}
 
         {tab === "home" && <HomeTab state={state} setState={setState} rm={rm} go={setTab} />}
         {tab === "map" && <MapTab state={state} setState={setState} rm={rm} goPlan={() => setTab("plan")} />}
@@ -126,6 +151,7 @@ export default function CertStudy() {
       <DeleteAccountDialog open={deleteOpen} setOpen={setDeleteOpen} />
       <ContactDialog open={contactOpen} setOpen={setContactOpen} />
       <LoginScreen open={loginOpen} setOpen={setLoginOpen} />
+      <SyncConflictDialog conflict={sync.conflict} onResolve={sync.resolveConflict} />
     </div>
   );
 }

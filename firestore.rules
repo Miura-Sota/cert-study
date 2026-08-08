@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 学習データ。本人のみ読み書きできる。
+    match /users/{uid} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // お問い合わせ。未ログインからの送信を許可するため create のみ開ける。
+    // 読み出し・書き換え・削除はクライアントから一切できない。
+    match /contacts/{doc} {
+      allow create: if request.resource.data.message is string
+                    && request.resource.data.message.size() > 0
+                    && request.resource.data.message.size() <= 4000;
+      allow read, update, delete: if false;
+    }
+
+    // 上記以外は全て拒否。
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

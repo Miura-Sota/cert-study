@@ -84,3 +84,33 @@ export const DEFAULT_STATE: AppState = {
   logs: [],
   scores: [],
 };
+
+/** 保存先(localStorage / クラウド)から読んだ値を AppState の形に整える。 */
+export function normalizeState(raw: unknown): AppState {
+  const v = (raw ?? {}) as Partial<AppState>;
+  return {
+    ...DEFAULT_STATE,
+    ...v,
+    target: { ...DEFAULT_STATE.target, ...(v.target || {}) },
+    status: v.status || {},
+    exp: v.exp || {},
+    plans: v.plans || {},
+    materials: Array.isArray(v.materials) ? v.materials : [],
+    logs: Array.isArray(v.logs) ? v.logs : [],
+    scores: Array.isArray(v.scores) ? v.scores : [],
+  };
+}
+
+/** 一度も触られていない初期状態か。同期の初回判定に使う。 */
+export function isPristineState(s: AppState): boolean {
+  return (
+    s.logs.length === 0 &&
+    s.scores.length === 0 &&
+    s.materials.length === 0 &&
+    Object.keys(s.plans).length === 0 &&
+    Object.keys(s.status).length === 0 &&
+    Object.keys(s.exp).length === 0 &&
+    s.target.certId === "" &&
+    s.target.examDate === ""
+  );
+}

@@ -2,8 +2,33 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import type { SyncStatus } from "@/lib/types";
 
-export function AccountMenu({ onDeleteAccount, onContact, onLogin }: { onDeleteAccount: () => void; onContact: () => void; onLogin: () => void }) {
+function syncLabel(status: SyncStatus, lastSyncedMs: number): string {
+  switch (status) {
+    case "syncing":
+      return "同期しています…";
+    case "synced": {
+      if (!lastSyncedMs) return "クラウドに保存中";
+      const d = new Date(lastSyncedMs);
+      return `クラウドに保存済み ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    }
+    case "offline":
+      return "オフライン（この端末にのみ保存）";
+    case "conflict":
+      return "記録の食い違いを確認してください";
+    default:
+      return "この端末にのみ保存";
+  }
+}
+
+export function AccountMenu({ onDeleteAccount, onContact, onLogin, syncStatus, lastSyncedMs }: {
+  onDeleteAccount: () => void;
+  onContact: () => void;
+  onLogin: () => void;
+  syncStatus: SyncStatus;
+  lastSyncedMs: number;
+}) {
   const { user, logOut } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -39,6 +64,9 @@ export function AccountMenu({ onDeleteAccount, onContact, onLogin }: { onDeleteA
         <div className="rm-menu-panel" role="menu">
           <div className="rm-menu-email" title={user?.email ?? user?.displayName ?? undefined}>
             {user?.email ?? user?.displayName ?? "ゲスト"}
+          </div>
+          <div className={`rm-menu-sync${syncStatus === "offline" || syncStatus === "conflict" ? " warn" : ""}`}>
+            {syncLabel(syncStatus, lastSyncedMs)}
           </div>
           <button type="button" className="rm-menu-item" role="menuitem"
             onClick={() => { setOpen(false); onContact(); }}>

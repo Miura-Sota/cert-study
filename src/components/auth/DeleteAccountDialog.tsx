@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toAuthErrorMessage, useAuth } from "@/lib/auth-context";
+import { deleteCloudState } from "@/lib/cloud-sync";
+import { clearSyncMeta } from "@/lib/sync-meta";
 import { TUTORIAL_KEY } from "@/lib/tutorial";
 
 const APP_STATE_KEY = "certstudy:v1";
@@ -28,30 +30,31 @@ export function DeleteAccountDialog({ open, setOpen }: { open: boolean; setOpen:
   const usesPassword = user?.providerData.some((p) => p.providerId === "password") ?? false;
 
   async function finishDelete() {
+    // クラウド上の記録は auth ユーザーより先に消す。
+    // deleteUser() の後はこのドキュメントへの権限が無くなり、孤児が残る。
+    const uid = user?.uid;
+    if (uid) {
+      try {
+        await deleteCloudState(uid);
+      } catch {
+        // 権限エラー以外(通信断など)でアカウント削除まで止めない。
+        // 残った場合もルール上、本人以外からは読めない。
+      }
+    }
     await deleteAccount();
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(APP_STATE_KEY);
       window.localStorage.removeItem(TUTORIAL_KEY);
     }
+    clearSyncMeta();
     close();
   }
 
-  async function handleConfirm() {
-    setBusy(true);
+  // 先にクラウドの記録を消す必要がある一方、本人確認は取り消せる。
+  // 順番を「本人確認 → 削除」に固定して、取り消した場合に記録だけ消える状態を防ぐ。
+  function handleConfirm() {
     setError("");
-    try {
-      await finishDelete();
-    } catch (err) {
-      const code = (err as { code?: string })?.code;
-      if (code === "auth/requires-recent-login") {
-        setStep(usesPassword ? "reauth-password" : "reauth-google");
-        setError("");
-      } else {
-        setError(toAuthErrorMessage(err));
-      }
-    } finally {
-      setBusy(false);
-    }
+    setStep(usesPassword ? "reauth-password" : "reauth-google");
   }
 
   async function handleReauthPassword(e: React.FormEvent) {
@@ -94,13 +97,13 @@ export function DeleteAccountDialog({ open, setOpen }: { open: boolean; setOpen:
           <>
             <h3>アカウントを削除しますか？</h3>
             <p>
-              アカウント（{user?.email ?? user?.displayName ?? "このアカウント"}）を削除すると、ログインができなくなり、この端末に保存された計画・教材・記録もあわせて削除されます。元に戻すことはできません。
+              アカウント（{user?.email ?? user?.displayName ?? "このアカウント"}）を削除すると、ログインができなくなり、<b>クラウドに保存された記録も、この端末に保存された計画・教材・記録も、すべて削除されます</b>。他の端末に残っている記録も次回の同期で消えます。元に戻すことはできません。
             </p>
             {error && <p className="rm-note rm-bad">{error}</p>}
             <div className="rm-dialog-row">
               <button type="button" className="rm-btn quiet sm" onClick={close} disabled={busy}>キャンセル</button>
               <button type="button" className="rm-btn sm rm-danger" onClick={handleConfirm} disabled={busy}>
-                {busy ? "削除しています…" : "削除する"}
+                削除に進む
               </button>
             </div>
           </>
