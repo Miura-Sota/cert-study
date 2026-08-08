@@ -5,13 +5,24 @@ import { toAuthErrorMessage, useAuth } from "@/lib/auth-context";
 
 type Mode = "signin" | "signup";
 
-export function LoginScreen() {
+export function LoginScreen({ open, setOpen }: { open: boolean; setOpen: (v: boolean) => void }) {
   const { configured, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  if (!open) return null;
+
+  const close = () => {
+    setOpen(false);
+    setMode("signin");
+    setEmail("");
+    setPassword("");
+    setError("");
+    setBusy(false);
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,6 +38,7 @@ export function LoginScreen() {
       } else {
         await signUpWithEmail(email, password);
       }
+      close();
     } catch (err) {
       setError(toAuthErrorMessage(err));
     } finally {
@@ -43,6 +55,7 @@ export function LoginScreen() {
     setError("");
     try {
       await signInWithGoogle();
+      close();
     } catch (err) {
       setError(toAuthErrorMessage(err));
     } finally {
@@ -51,79 +64,83 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="rm" style={{ "--c": "#2563C9" } as React.CSSProperties}>
-      <div className="rm-wrap rm-auth-wrap">
-        <header className="rm-head">
-          <div>
-            <h1>資格ロードマップ</h1>
-            <p>働きながら資格を取るための、計画・教材・記録がつながるノート。</p>
-          </div>
-        </header>
+    <div className="rm-dialog-backdrop" role="presentation" onClick={close}>
+      <div
+        className="rm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={mode === "signin" ? "ログイン" : "新規登録"}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3>{mode === "signin" ? "ログイン" : "新規登録"}</h3>
+        <p>
+          ログインしなくても、この端末に保存された記録はそのまま使えます。ログインすると、お問い合わせの返信先メールアドレスなどに使われます。
+        </p>
 
-        <div className="rm-card rm-auth-card">
-          <h2 className="rm-auth-title">{mode === "signin" ? "ログイン" : "新規登録"}</h2>
+        {!configured && (
+          <p className="rm-note rm-bad">
+            Firebase が未設定です。.env.local に NEXT_PUBLIC_FIREBASE_* を設定してください。
+          </p>
+        )}
 
-          {!configured && (
-            <p className="rm-note rm-bad">
-              Firebase が未設定です。.env.local に NEXT_PUBLIC_FIREBASE_* を設定してください。
-            </p>
-          )}
+        <form onSubmit={handleSubmit} className="rm-auth-form">
+          <label className="rm-auth-label">
+            メールアドレス
+            <input
+              className="rm-in"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
+          <label className="rm-auth-label">
+            パスワード
+            <input
+              className="rm-in"
+              type="password"
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
 
-          <form onSubmit={handleSubmit} className="rm-auth-form">
-            <label className="rm-auth-label">
-              メールアドレス
-              <input
-                className="rm-in"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-            <label className="rm-auth-label">
-              パスワード
-              <input
-                className="rm-in"
-                type="password"
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </label>
+          {error && <p className="rm-note rm-bad">{error}</p>}
 
-            {error && <p className="rm-note rm-bad">{error}</p>}
-
-            <button type="submit" className="rm-btn pri rm-auth-submit" disabled={busy}>
-              {mode === "signin" ? "ログイン" : "登録する"}
-            </button>
-          </form>
-
-          <button
-            type="button"
-            className="rm-btn quiet sm"
-            onClick={() => {
-              setError("");
-              setMode(mode === "signin" ? "signup" : "signin");
-            }}
-          >
-            {mode === "signin" ? "アカウントをお持ちでない方はこちら" : "既にアカウントをお持ちの方はこちら"}
+          <button type="submit" className="rm-btn pri rm-auth-submit" disabled={busy}>
+            {mode === "signin" ? "ログイン" : "登録する"}
           </button>
+        </form>
 
-          <div className="rm-auth-divider"><span>または</span></div>
+        <button
+          type="button"
+          className="rm-btn quiet sm"
+          onClick={() => {
+            setError("");
+            setMode(mode === "signin" ? "signup" : "signin");
+          }}
+        >
+          {mode === "signin" ? "アカウントをお持ちでない方はこちら" : "既にアカウントをお持ちの方はこちら"}
+        </button>
 
-          <div className="rm-auth-social">
-            <button type="button" className="rm-btn rm-auth-social-btn" onClick={handleGoogle} disabled={busy}>
-              <GoogleIcon />
-              Googleでログイン
-            </button>
-            <button type="button" className="rm-btn rm-auth-social-btn" disabled title="Apple Developer Program 登録後に対応予定です">
-              <AppleIcon />
-              Appleでログイン(準備中)
-            </button>
-          </div>
+        <div className="rm-auth-divider"><span>または</span></div>
+
+        <div className="rm-auth-social">
+          <button type="button" className="rm-btn rm-auth-social-btn" onClick={handleGoogle} disabled={busy}>
+            <GoogleIcon />
+            Googleでログイン
+          </button>
+          <button type="button" className="rm-btn rm-auth-social-btn" disabled title="Apple Developer Program 登録後に対応予定です">
+            <AppleIcon />
+            Appleでログイン(準備中)
+          </button>
+        </div>
+
+        <div className="rm-dialog-row">
+          <button type="button" className="rm-btn quiet sm" onClick={close} disabled={busy}>閉じる</button>
         </div>
       </div>
     </div>

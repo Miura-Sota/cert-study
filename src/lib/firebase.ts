@@ -1,5 +1,6 @@
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { type Auth, GoogleAuthProvider, getAuth } from "firebase/auth";
+import { type Firestore, getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,6 +17,7 @@ export const isFirebaseConfigured = Boolean(
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
+let db: Firestore | undefined;
 
 // 静的エクスポートのビルド(サーバー側プリレンダー)では window が無いため、
 // クライアントで実際に使われるまで初期化を遅らせる。
@@ -35,6 +37,24 @@ export function getFirebaseAuth(): Auth {
     auth = getAuth(app);
   }
   return auth;
+}
+
+export function getFirebaseDb(): Firestore {
+  if (typeof window === "undefined") {
+    throw new Error("getFirebaseDb はブラウザ内でのみ呼び出せます。");
+  }
+  if (!isFirebaseConfigured) {
+    throw new Error(
+      "Firebase の設定が見つかりません。.env.local に NEXT_PUBLIC_FIREBASE_* を設定してください。",
+    );
+  }
+  if (!app) {
+    app = getApps()[0] ?? initializeApp(firebaseConfig);
+  }
+  if (!db) {
+    db = getFirestore(app);
+  }
+  return db;
 }
 
 export const googleProvider = new GoogleAuthProvider();

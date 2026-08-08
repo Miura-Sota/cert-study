@@ -157,6 +157,9 @@ export const KINDS: Kind[] = [
 ];
 export const kindOf = (id: string): Kind => KINDS.find((k) => k.id === id) || KINDS[0];
 
+// 1回の単位が短く、通勤・昼休みなどの隙間時間でも進めやすい教材の種類
+export const GAP_FRIENDLY_KINDS = ["quiz", "doc"];
+
 export const EXP_LEVELS: ExpLevel[] = [
   { id: "none", name: "触ったことがない", desc: "用語から覚える段階", f: 1.3 },
   { id: "basic", name: "基礎知識はある", desc: "概要は把握している", f: 1.0 },

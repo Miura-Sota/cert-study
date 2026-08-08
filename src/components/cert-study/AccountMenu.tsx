@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
-export function AccountMenu({ onDeleteAccount, onContact }: { onDeleteAccount: () => void; onContact: () => void }) {
+export function AccountMenu({ onDeleteAccount, onContact, onLogin }: { onDeleteAccount: () => void; onContact: () => void; onLogin: () => void }) {
   const { user, logOut } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -44,14 +44,23 @@ export function AccountMenu({ onDeleteAccount, onContact }: { onDeleteAccount: (
             onClick={() => { setOpen(false); onContact(); }}>
             お問い合わせ
           </button>
-          <button type="button" className="rm-menu-item" role="menuitem"
-            onClick={() => { setOpen(false); logOut(); }}>
-            ログアウト
-          </button>
-          <button type="button" className="rm-menu-item danger" role="menuitem"
-            onClick={() => { setOpen(false); onDeleteAccount(); }}>
-            アカウントを削除
-          </button>
+          {user ? (
+            <>
+              <button type="button" className="rm-menu-item" role="menuitem"
+                onClick={() => { setOpen(false); logOut(); }}>
+                ログアウト
+              </button>
+              <button type="button" className="rm-menu-item danger" role="menuitem"
+                onClick={() => { setOpen(false); onDeleteAccount(); }}>
+                アカウントを削除
+              </button>
+            </>
+          ) : (
+            <button type="button" className="rm-menu-item" role="menuitem"
+              onClick={() => { setOpen(false); onLogin(); }}>
+              ログイン / 新規登録
+            </button>
+          )}
         </div>
       )}
     </div>

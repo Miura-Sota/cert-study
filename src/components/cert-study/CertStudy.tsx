@@ -22,7 +22,7 @@ import { Tutorial } from "./Tutorial";
 const KEY = "certstudy:v1";
 
 export default function CertStudy() {
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [tab, setTab] = useState<AppTab>("home");
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,7 @@ export default function CertStudy() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -74,10 +75,6 @@ export default function CertStudy() {
     );
   }
 
-  if (!user) {
-    return <LoginScreen />;
-  }
-
   if (loading) {
     return (
       <div className="rm">
@@ -98,7 +95,7 @@ export default function CertStudy() {
             <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>
               使い方を見る
             </button>
-            <AccountMenu onDeleteAccount={() => setDeleteOpen(true)} onContact={() => setContactOpen(true)} />
+            <AccountMenu onDeleteAccount={() => setDeleteOpen(true)} onContact={() => setContactOpen(true)} onLogin={() => setLoginOpen(true)} />
           </div>
         </header>
 
@@ -128,6 +125,7 @@ export default function CertStudy() {
       <Tutorial state={state} tab={tab} setTab={setTab} open={tutorialOpen} setOpen={setTutorialOpen} />
       <DeleteAccountDialog open={deleteOpen} setOpen={setDeleteOpen} />
       <ContactDialog open={contactOpen} setOpen={setContactOpen} />
+      <LoginScreen open={loginOpen} setOpen={setLoginOpen} />
     </div>
   );
 }

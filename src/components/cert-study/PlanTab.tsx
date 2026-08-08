@@ -61,6 +61,13 @@ export function PlanTab({ state, setState, rm, goMap }: { state: AppState; setSt
     const sum = ps.reduce((a, p) => a + num(p.hours), 0) || 1;
     return ps.map((p) => ({ ...p, hours: Math.round(est.hours * (num(p.hours) / sum)) }));
   });
+  const replanFromToday = () => setPhases((ps) => {
+    const today = todayISO();
+    const remaining = Math.max(0, est.hours - doneH);
+    const future = ps.filter((p) => p.to >= today);
+    const futureSum = future.reduce((a, p) => a + num(p.hours), 0) || 1;
+    return ps.map((p) => (p.to >= today ? { ...p, hours: Math.round(remaining * (num(p.hours) / futureSum)) } : p));
+  });
   return (
     <>
       <section className="rm-sec"><Hero state={state} rm={rm} /></section>
@@ -107,6 +114,8 @@ export function PlanTab({ state, setState, rm, goMap }: { state: AppState; setSt
                   : `週 ${target.weeklyHours}h では ${(needWeekly - num(target.weeklyHours)).toFixed(1)}h/週 足りません。確保時間を増やすか、計画を削るか、試験日をずらすかの判断が要ります。`}
               {planHours !== est.hours && (<> 　計画の合計が推定（{est.hours}h）とずれています。
                 <button className="rm-btn sm" style={{ marginLeft: 6 }} onClick={redistribute}>推定に合わせて再配分</button></>)}
+              {needWeekly !== null && !onPace && (<> 　残業などで今週は思うように進まなかった場合、残りの推定時間を今日以降のフェーズへ配分し直せます。
+                <button className="rm-btn sm" style={{ marginLeft: 6 }} onClick={replanFromToday}>今週は忙しかったので立て直す</button></>)}
             </p>
           </div>
         </section>

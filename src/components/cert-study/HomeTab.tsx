@@ -1,12 +1,29 @@
 import { useMemo, type Dispatch, type SetStateAction } from "react";
-import { CERTS, ROADMAPS, kindOf } from "@/lib/data";
+import { CERTS, GAP_FRIENDLY_KINDS, ROADMAPS, kindOf } from "@/lib/data";
 import type { AppState, AppTab, Roadmap } from "@/lib/types";
-import { addDays, fmtMD, mondayOf, num, parseISO } from "@/lib/utils";
+import { addDays, fmtMD, mondayOf, num, parseISO, todayISO, uid } from "@/lib/utils";
 import { Hero } from "./Hero";
 import { WeekChart } from "./charts";
 
-export function HomeTab({ state, rm, go }: { state: AppState; setState: Dispatch<SetStateAction<AppState>>; rm: Roadmap; go: (tab: AppTab) => void }) {
-  const { logs, target } = state;
+export function HomeTab({ state, setState, rm, go }: { state: AppState; setState: Dispatch<SetStateAction<AppState>>; rm: Roadmap; go: (tab: AppTab) => void }) {
+  const { logs, target, materials } = state;
+  const gapCandidates = useMemo(() => {
+    return materials
+      .filter((m) => m.certId === target.certId && GAP_FRIENDLY_KINDS.includes(m.kind))
+      .map((m) => {
+        const progress = logs.filter((l) => l.materialId === m.id).reduce((a, b) => a + num(b.amount), 0);
+        return { material: m, progress };
+      })
+      .filter((c) => c.progress < c.material.total)
+      .slice(0, 2);
+  }, [materials, logs, target.certId]);
+
+  const quickLog = (materialId: string) => {
+    setState((s) => ({
+      ...s,
+      logs: [{ id: uid(), date: todayISO(), minutes: 10, certId: target.certId, materialId, amount: 0, topic: "", note: "隙間時間モード" }, ...s.logs],
+    }));
+  };
   const weeks = useMemo(() => {
     const base = mondayOf(new Date());
     return Array.from({ length: 8 }, (_, i) => {
@@ -20,6 +37,27 @@ export function HomeTab({ state, rm, go }: { state: AppState; setState: Dispatch
   return (
     <>
       <section className="rm-sec"><Hero state={state} rm={rm} onSetGoal={() => go("map")} /></section>
+
+      <section className="rm-sec">
+        <h2>隙間時間で1つやる（5〜15分）</h2>
+        <div className="rm-card">
+          {gapCandidates.length === 0 ? (
+            <p className="rm-empty">教材タブで問題集やドキュメントを登録すると、通勤・昼休みなどの隙間時間向けの候補がここに出ます。</p>
+          ) : gapCandidates.map(({ material, progress }) => {
+            const k = kindOf(material.kind);
+            return (
+              <div key={material.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #F3F0EB" }}>
+                <span className="rm-tag" style={{ "--k": k.color } as React.CSSProperties}>{k.name}</span>
+                <span style={{ flex: 1, fontSize: 13, minWidth: 0 }}>
+                  {material.name}
+                  <span style={{ color: "var(--sub)", fontSize: 12 }}>　{progress}/{material.total}{k.unit}</span>
+                </span>
+                <button className="rm-btn sm pri" onClick={() => quickLog(material.id)}>＋10分 記録する</button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="rm-sec">
         <h2>週ごとの学習時間<span className="r"><button className="rm-btn sm" onClick={() => go("log")}>記録する</button></span></h2>
