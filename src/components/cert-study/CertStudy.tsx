@@ -10,6 +10,8 @@ import { TUTORIAL_KEY } from "@/lib/tutorial";
 import type { AppState, AppTab } from "@/lib/types";
 import { DEFAULT_STATE } from "@/lib/utils";
 import "./cert-study.css";
+import { AccountMenu } from "./AccountMenu";
+import { ContactDialog } from "./ContactDialog";
 import { HomeTab } from "./HomeTab";
 import { MapTab } from "./MapTab";
 import { PlanTab } from "./PlanTab";
@@ -20,13 +22,14 @@ import { Tutorial } from "./Tutorial";
 const KEY = "certstudy:v1";
 
 export default function CertStudy() {
-  const { user, loading: authLoading, logOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [tab, setTab] = useState<AppTab>("home");
   const [loading, setLoading] = useState(true);
   const [saveErr, setSaveErr] = useState("");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -92,18 +95,10 @@ export default function CertStudy() {
             <p>働きながら資格を取るための、計画・教材・記録がつながるノート。</p>
           </div>
           <div className="rm-head-tools">
-            <div className="rm-auth-user">
-              <span title={user.email ?? user.displayName ?? undefined}>
-                {user.email ?? user.displayName ?? "ゲスト"}
-              </span>
-              <button className="rm-btn quiet sm" onClick={() => logOut()}>ログアウト</button>
-              <button className="rm-btn quiet sm rm-danger" onClick={() => setDeleteOpen(true)}>
-                アカウントを削除
-              </button>
-            </div>
             <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>
               使い方を見る
             </button>
+            <AccountMenu onDeleteAccount={() => setDeleteOpen(true)} onContact={() => setContactOpen(true)} />
           </div>
         </header>
 
@@ -132,6 +127,7 @@ export default function CertStudy() {
 
       <Tutorial state={state} tab={tab} setTab={setTab} open={tutorialOpen} setOpen={setTutorialOpen} />
       <DeleteAccountDialog open={deleteOpen} setOpen={setDeleteOpen} />
+      <ContactDialog open={contactOpen} setOpen={setContactOpen} />
     </div>
   );
 }

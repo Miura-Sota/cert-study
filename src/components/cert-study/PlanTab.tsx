@@ -1,8 +1,8 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { CERTS } from "@/lib/data";
 import { TEMPLATES, buildFromTemplate } from "@/lib/templates";
-import { buildICS, downloadText, gcalUrl } from "@/lib/ics";
-import type { AppState, Phase, Roadmap, WeeklyIcsSetting } from "@/lib/types";
+import { buildCalendarEvents } from "@/lib/calendar";
+import type { AppState, Phase, Roadmap, WeeklySlot } from "@/lib/types";
 import { addDays, daysBetween, estimate, num, todayISO, toISO, uid } from "@/lib/utils";
 import { Hero } from "./Hero";
 import { ExpPanel } from "./ExpPanel";
@@ -14,12 +14,10 @@ export function PlanTab({ state, setState, rm, goMap }: { state: AppState; setSt
   const phases = plans[target.certId] || null;
   const [prevTargetCertId, setPrevTargetCertId] = useState(target.certId);
   const [showTpl, setShowTpl] = useState(false);
-  const [weekly, setWeekly] = useState<WeeklyIcsSetting>({ on: true, dow: 5, time: "09:00", minutes: 120 });
-  const [icsText, setIcsText] = useState("");
+  const [weeklySlots, setWeeklySlots] = useState<WeeklySlot[]>([{ id: uid(), dow: 5, time: "09:00", minutes: 120 }]);
   if (target.certId !== prevTargetCertId) {
     setPrevTargetCertId(target.certId);
     setShowTpl(false);
-    setIcsText("");
   }
 
   const setT = (p: Partial<AppState["target"]>) => setState((s) => ({ ...s, target: { ...s.target, ...p } }));
@@ -49,7 +47,8 @@ export function PlanTab({ state, setState, rm, goMap }: { state: AppState; setSt
   const doneItems = allItems.filter((i) => i.done).length;
   const apply = (cert.links || []).find((l) => l.apply);
   const curTpl = phases && phases[0] && phases[0].tpl ? TEMPLATES.find((t) => t.id === phases[0].tpl) : null;
-  const gcal = gcalUrl(cert, target);
+  const calEvents = buildCalendarEvents(cert, target, phases, weeklySlots);
+  const openAllCalendarEvents = () => calEvents.forEach((ev) => window.open(ev.url, "_blank", "noopener,noreferrer"));
 
   const applyTemplate = (tplId: string) => {
     const t = TEMPLATES.find((x) => x.id === tplId);
@@ -62,11 +61,6 @@ export function PlanTab({ state, setState, rm, goMap }: { state: AppState; setSt
     const sum = ps.reduce((a, p) => a + num(p.hours), 0) || 1;
     return ps.map((p) => ({ ...p, hours: Math.round(est.hours * (num(p.hours) / sum)) }));
   });
-  const exportICS = () => {
-    const text = buildICS(cert, target, phases, weekly);
-    if (!downloadText(`${cert.org}-plan.ics`, text)) setIcsText(text);
-  };
-
   return (
     <>
       <section className="rm-sec"><Hero state={state} rm={rm} /></section>
@@ -205,47 +199,67 @@ export function PlanTab({ state, setState, rm, goMap }: { state: AppState; setSt
         <h2>カレンダーに入れる</h2>
         <div className="rm-card">
           <p className="rm-note" style={{ marginTop: 0 }}>
-            試験日とフェーズの期間を、普段使っているカレンダーに登録できます。Google カレンダーは1件ずつ、iPhone の標準カレンダーや Outlook は .ics ファイルの読み込みでまとめて入ります。
+            試験日・フェーズの期間・毎週の学習枠を Google カレンダーに登録できます。iPhone の標準カレンダーで見たい場合は、標準カレンダーアプリの「アカウント」設定から Google アカウントを追加すると、同じ予定がそのまま表示されます。
           </p>
-          <div className="rm-row" style={{ marginTop: 12 }}>
-            {gcal
-              ? <a className="rm-btn pri" href={gcal} target="_blank" rel="noopener noreferrer">Google カレンダーに受験日を追加 ↗</a>
-              : <button className="rm-btn" disabled>Google カレンダーに受験日を追加（試験日が未設定）</button>}
-            <button className="rm-btn" onClick={exportICS} disabled={!target.examDate && !phases}>
-              .ics で書き出す（iPhone・Outlook 用）
-            </button>
-          </div>
 
           <div style={{ marginTop: 16, borderTop: "1px solid var(--hair)", paddingTop: 14 }}>
-            <label className="rm-row" style={{ marginBottom: 10, cursor: "pointer" }}>
-              <input type="checkbox" checked={weekly.on} onChange={(e) => setWeekly({ ...weekly, on: e.target.checked })}
-                style={{ width: 15, height: 15, accentColor: "#17936A" }} />
-              <span style={{ fontSize: 13, fontWeight: 700 }}>毎週の学習枠も一緒に書き出す</span>
-            </label>
-            {weekly.on && (
-              <div className="rm-2">
+            <div className="rm-row" style={{ marginBottom: 10, justifyContent: "space-between" }}>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>毎週の学習枠</span>
+              <button className="rm-btn sm"
+                onClick={() => setWeeklySlots((ws) => [...ws, { id: uid(), dow: 5, time: "09:00", minutes: 120 }])}>
+                ＋ 枠を追加
+              </button>
+            </div>
+            {weeklySlots.length === 0 && (
+              <p className="rm-note" style={{ marginTop: 0 }}>学習枠はまだありません。「＋ 枠を追加」から自由に追加できます（複数追加できます）。</p>
+            )}
+            {weeklySlots.map((slot) => (
+              <div className="rm-2" key={slot.id} style={{ alignItems: "end" }}>
                 <label className="rm-f"><span>曜日</span>
-                  <select className="rm-in" value={weekly.dow} onChange={(e) => setWeekly({ ...weekly, dow: Number(e.target.value) })}>
+                  <select className="rm-in" value={slot.dow}
+                    onChange={(e) => setWeeklySlots((ws) => ws.map((w) => w.id === slot.id ? { ...w, dow: Number(e.target.value) } : w))}>
                     {["月", "火", "水", "木", "金", "土", "日"].map((d, i) => <option key={d} value={i}>{d}曜日</option>)}
                   </select></label>
                 <label className="rm-f"><span>開始時刻</span>
-                  <input className="rm-in rm-mono" type="time" value={weekly.time} onChange={(e) => setWeekly({ ...weekly, time: e.target.value })} /></label>
-                <label className="rm-f"><span>1回の長さ（分）</span>
-                  <NumInput className="rm-in rm-mono" value={weekly.minutes} min={15} max={600}
-                    onCommit={(v) => setWeekly((w) => ({ ...w, minutes: v }))} /></label>
+                  <input className="rm-in rm-mono" type="time" value={slot.time}
+                    onChange={(e) => setWeeklySlots((ws) => ws.map((w) => w.id === slot.id ? { ...w, time: e.target.value } : w))} /></label>
+                <label className="rm-f" style={{ display: "flex", alignItems: "flex-end", gap: 6 }}>
+                  <span style={{ flex: 1 }}>
+                    <span style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--sub)", marginBottom: 5 }}>1回の長さ（分）</span>
+                    <NumInput className="rm-in rm-mono" value={slot.minutes} min={15} max={600}
+                      onCommit={(v) => setWeeklySlots((ws) => ws.map((w) => w.id === slot.id ? { ...w, minutes: v } : w))} />
+                  </span>
+                  <button className="rm-ico warn" style={{ marginBottom: 13 }} aria-label="この学習枠を削除"
+                    onClick={() => setWeeklySlots((ws) => ws.filter((w) => w.id !== slot.id))}>×</button>
+                </label>
               </div>
+            ))}
+            {weeklySlots.length > 0 && !target.examDate && (
+              <p className="rm-note rm-bad">毎週の予定は試験日までの繰り返しとして作るため、試験日の入力が必要です。</p>
             )}
-            {weekly.on && !target.examDate && <p className="rm-note rm-bad">毎週の予定は試験日までの繰り返しとして作るため、試験日の入力が必要です。</p>}
           </div>
 
-          {icsText && (
-            <div style={{ marginTop: 14 }}>
-              <p className="rm-note" style={{ marginTop: 0 }}>
-                この画面ではファイル保存がブロックされました。下のテキストをコピーして <b>.ics</b> という拡張子で保存し、カレンダーアプリで開いてください。
-              </p>
-              <textarea className="rm-ics" readOnly value={icsText} onFocus={(e) => e.target.select()} />
+          <div style={{ marginTop: 16, borderTop: "1px solid var(--hair)", paddingTop: 14 }}>
+            <div className="rm-row" style={{ marginBottom: 10, justifyContent: "space-between" }}>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>登録する予定（{calEvents.length}件）</span>
+              <button className="rm-btn pri sm" onClick={openAllCalendarEvents} disabled={calEvents.length === 0}>
+                まとめて Google カレンダーに登録 ↗
+              </button>
             </div>
-          )}
+            {calEvents.length === 0 ? (
+              <p className="rm-note" style={{ marginTop: 0 }}>試験日・フェーズ・学習枠のいずれかを設定すると、ここに登録候補の一覧が出ます。</p>
+            ) : (
+              <ul className="rm-cal-list">
+                {calEvents.map((ev) => (
+                  <li key={ev.key}>
+                    <span>{ev.label}</span>
+                    <a className="rm-btn sm" href={ev.url} target="_blank" rel="noopener noreferrer">追加 ↗</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="rm-note">「まとめて登録」は予定の数だけタブを開きます。ブラウザにブロックされた場合は、一覧から1件ずつ「追加」を押してください。開いた Google カレンダーの画面で内容を確認して保存してください。</p>
+          </div>
         </div>
       </section>
     </>

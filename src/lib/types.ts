@@ -131,8 +131,8 @@ export type Estimate = {
   hours: number;
 };
 
-export type WeeklyIcsSetting = {
-  on: boolean;
+export type WeeklySlot = {
+  id: string;
   dow: number;
   time: string;
   minutes: number;

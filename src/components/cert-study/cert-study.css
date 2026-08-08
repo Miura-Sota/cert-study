@@ -227,8 +227,10 @@
 .rm-x:hover{color:var(--alert);}
 .rm-empty{color:var(--sub);font-size:13px;padding:20px 0;text-align:center;}
 
-.rm-ics{width:100%;font-family:'Roboto Mono',monospace;font-size:10.5px;height:130px;margin-top:10px;
-  border:1px solid var(--line);border-radius:6px;padding:8px;background:#FBFAF8;}
+.rm-cal-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+.rm-cal-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;
+  padding:7px 0;border-bottom:1px solid #F3F0EB;}
+.rm-cal-list li:last-child{border-bottom:none;}
 
 .rm-foot{max-width:780px;margin:34px auto 0;padding:16px 18px 0;border-top:1px solid var(--hair);
   font-size:11.5px;color:var(--sub);display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
@@ -277,6 +279,28 @@
 .rm-auth-user span{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default;}
 .rm-danger{color:var(--alert);}
 .rm-danger:hover{border-color:var(--alert);color:var(--alert);}
+
+/* account menu */
+.rm-menu{position:relative;}
+.rm-menu-btn{appearance:none;background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  width:32px;height:32px;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px;}
+.rm-menu-btn:hover{border-color:var(--ink);}
+.rm-menu-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+.rm-menu-btn span{display:block;width:16px;height:2px;background:var(--ink);border-radius:2px;}
+.rm-menu-panel{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--hair);
+  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);min-width:220px;padding:8px;z-index:30;}
+.rm-menu-email{font-size:11.5px;color:var(--sub);padding:6px 10px 8px;border-bottom:1px solid var(--hair);
+  margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rm-menu-item{display:block;width:100%;text-align:left;appearance:none;font:inherit;font-size:13px;
+  background:none;border:none;border-radius:6px;padding:8px 10px;cursor:pointer;color:var(--ink);}
+.rm-menu-item:hover{background:#F1EEE9;}
+.rm-menu-item.danger{color:var(--alert);}
+
+/* contact form */
+.rm-contact-ta{width:100%;font:inherit;font-size:13px;padding:9px 10px;border:1px solid var(--line);
+  border-radius:6px;background:#fff;color:var(--ink);resize:vertical;min-height:120px;}
+.rm-contact-ta:focus{outline:2px solid var(--c,#2563C9);outline-offset:-1px;}
 
 /* dialog */
 .rm-dialog-backdrop{position:fixed;inset:0;background:rgba(28,27,26,.45);display:flex;align-items:center;
