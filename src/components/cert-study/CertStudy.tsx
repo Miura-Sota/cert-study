@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoginScreen } from "@/components/auth/LoginScreen";
+import { useAuth } from "@/lib/auth-context";
 import { ROADMAPS } from "@/lib/data";
 import { storage } from "@/lib/storage";
 import { TUTORIAL_KEY } from "@/lib/tutorial";
@@ -17,6 +19,7 @@ import { Tutorial } from "./Tutorial";
 const KEY = "certstudy:v1";
 
 export default function CertStudy() {
+  const { user, loading: authLoading, logOut } = useAuth();
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [tab, setTab] = useState<AppTab>("home");
   const [loading, setLoading] = useState(true);
@@ -58,6 +61,18 @@ export default function CertStudy() {
 
   const rm = ROADMAPS.find((r) => r.id === state.goal) || ROADMAPS[0];
 
+  if (authLoading) {
+    return (
+      <div className="rm">
+        <div className="rm-wrap"><p style={{ color: "#6B6A67", paddingTop: 40 }}>読み込んでいます…</p></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
   if (loading) {
     return (
       <div className="rm">
@@ -74,7 +89,11 @@ export default function CertStudy() {
             <h1>資格ロードマップ</h1>
             <p>働きながら資格を取るための、計画・教材・記録がつながるノート。</p>
           </div>
-          <button className="rm-btn quiet sm" style={{ marginLeft: "auto" }} onClick={() => setTutorialOpen(true)}>
+          <div className="rm-auth-user">
+            <span>{user.email ?? user.displayName ?? "ゲスト"}</span>
+            <button className="rm-btn quiet sm" onClick={() => logOut()}>ログアウト</button>
+          </div>
+          <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>
             使い方を見る
           </button>
         </header>
