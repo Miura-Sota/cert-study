@@ -14,6 +14,7 @@ import "./cert-study.css";
 import { AccountMenu } from "./AccountMenu";
 import { BackupPrompt } from "./BackupPrompt";
 import { ContactDialog } from "./ContactDialog";
+import { ShareDialog } from "./ShareDialog";
 import { SyncConflictDialog } from "./SyncConflictDialog";
 import { HomeTab } from "./HomeTab";
 import { Logo } from "./Logo";
@@ -35,6 +36,7 @@ export default function CertStudy() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -103,6 +105,9 @@ export default function CertStudy() {
             <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>
               使い方を見る
             </button>
+            <button className="rm-btn quiet sm" onClick={() => setShareOpen(true)}>
+              共有する
+            </button>
             <AccountMenu
               onDeleteAccount={() => setDeleteOpen(true)}
               onContact={() => setContactOpen(true)}
@@ -154,6 +159,7 @@ export default function CertStudy() {
       <Tutorial state={state} tab={tab} setTab={setTab} open={tutorialOpen} setOpen={setTutorialOpen} />
       <DeleteAccountDialog open={deleteOpen} setOpen={setDeleteOpen} />
       <ContactDialog open={contactOpen} setOpen={setContactOpen} />
+      <ShareDialog open={shareOpen} setOpen={setShareOpen} />
       <LoginScreen open={loginOpen} setOpen={setLoginOpen} />
       <SyncConflictDialog conflict={sync.conflict} onResolve={sync.resolveConflict} />
     </div>
