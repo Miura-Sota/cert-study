@@ -16,6 +16,7 @@ import { BackupPrompt } from "./BackupPrompt";
 import { ContactDialog } from "./ContactDialog";
 import { SyncConflictDialog } from "./SyncConflictDialog";
 import { HomeTab } from "./HomeTab";
+import { Logo } from "./Logo";
 import { MapTab } from "./MapTab";
 import { PlanTab } from "./PlanTab";
 import { MaterialTab } from "./MaterialTab";
@@ -91,9 +92,12 @@ export default function CertStudy() {
     <div className="rm" style={{ "--c": rm.color } as React.CSSProperties}>
       <div className="rm-wrap">
         <header className="rm-head">
-          <div>
-            <h1>資格ロードマップ</h1>
-            <p>働きながら資格を取るための、計画・教材・記録がつながるノート。</p>
+          <div className="rm-head-id">
+            <Logo size={30} />
+            <div className="rm-head-t">
+              <h1>資格ロードマップ</h1>
+              <p>働きながら資格を取るための、計画・教材・記録がつながるノート。</p>
+            </div>
           </div>
           <div className="rm-head-tools">
             <button className="rm-btn quiet sm" onClick={() => setTutorialOpen(true)}>

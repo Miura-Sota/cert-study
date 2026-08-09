@@ -14,6 +14,9 @@
 
 /* header + tabs */
 .rm-head{padding:26px 0 16px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.rm-head-id{display:flex;align-items:flex-start;gap:11px;min-width:0;}
+.rm-head-id>svg{margin-top:3px;}
+.rm-head-t{min-width:0;}
 .rm-head h1{font-size:20px;font-weight:900;margin:0;letter-spacing:.02em;word-break:keep-all;overflow-wrap:break-word;}
 .rm-head p{margin:2px 0 0;font-size:12.5px;color:var(--sub);word-break:keep-all;overflow-wrap:break-word;}
 .rm-head-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:auto;}
