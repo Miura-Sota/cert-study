@@ -5,7 +5,11 @@ import { toAuthErrorMessage, useAuth } from "@/lib/auth-context";
 
 type Mode = "signin" | "signup";
 
-export function LoginScreen({ open, setOpen }: { open: boolean; setOpen: (v: boolean) => void }) {
+export function LoginScreen({ open, setOpen, onSuccess }: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  onSuccess?: (message: string) => void;
+}) {
   const { configured, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -38,6 +42,7 @@ export function LoginScreen({ open, setOpen }: { open: boolean; setOpen: (v: boo
       } else {
         await signUpWithEmail(email, password);
       }
+      onSuccess?.(mode === "signin" ? "ログインしました。" : "アカウントを作成しました。");
       close();
     } catch (err) {
       setError(toAuthErrorMessage(err));
@@ -55,6 +60,7 @@ export function LoginScreen({ open, setOpen }: { open: boolean; setOpen: (v: boo
     setError("");
     try {
       await signInWithGoogle();
+      onSuccess?.("ログインしました。");
       close();
     } catch (err) {
       setError(toAuthErrorMessage(err));

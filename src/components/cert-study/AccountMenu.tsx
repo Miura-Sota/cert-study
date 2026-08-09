@@ -22,10 +22,11 @@ function syncLabel(status: SyncStatus, lastSyncedMs: number): string {
   }
 }
 
-export function AccountMenu({ onDeleteAccount, onContact, onLogin, syncStatus, lastSyncedMs }: {
+export function AccountMenu({ onDeleteAccount, onContact, onLogin, onLoggedOut, syncStatus, lastSyncedMs }: {
   onDeleteAccount: () => void;
   onContact: () => void;
   onLogin: () => void;
+  onLoggedOut?: () => void;
   syncStatus: SyncStatus;
   lastSyncedMs: number;
 }) {
@@ -75,7 +76,7 @@ export function AccountMenu({ onDeleteAccount, onContact, onLogin, syncStatus, l
           {user ? (
             <>
               <button type="button" className="rm-menu-item" role="menuitem"
-                onClick={() => { setOpen(false); logOut(); }}>
+                onClick={async () => { setOpen(false); await logOut(); onLoggedOut?.(); }}>
                 ログアウト
               </button>
               <button type="button" className="rm-menu-item danger" role="menuitem"

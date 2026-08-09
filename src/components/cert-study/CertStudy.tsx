@@ -37,6 +37,13 @@ export default function CertStudy() {
   const [contactOpen, setContactOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [authNotice, setAuthNotice] = useState("");
+
+  useEffect(() => {
+    if (!authNotice) return;
+    const t = setTimeout(() => setAuthNotice(""), 3000);
+    return () => clearTimeout(t);
+  }, [authNotice]);
 
   useEffect(() => {
     (async () => {
@@ -112,6 +119,7 @@ export default function CertStudy() {
               onDeleteAccount={() => setDeleteOpen(true)}
               onContact={() => setContactOpen(true)}
               onLogin={() => setLoginOpen(true)}
+              onLoggedOut={() => setAuthNotice("ログアウトしました。")}
               syncStatus={sync.status}
               lastSyncedMs={sync.lastSyncedMs}
             />
@@ -125,6 +133,10 @@ export default function CertStudy() {
         </nav>
 
         {saveErr && <p className="rm-note rm-bad" style={{ marginTop: 12 }}>{saveErr}</p>}
+
+        {authNotice && (
+          <p className="rm-note rm-good" role="status" style={{ marginTop: 12 }}>{authNotice}</p>
+        )}
 
         {sync.status === "offline" && (
           <p className="rm-note rm-bad" style={{ marginTop: 12 }}>
@@ -160,7 +172,7 @@ export default function CertStudy() {
       <DeleteAccountDialog open={deleteOpen} setOpen={setDeleteOpen} />
       <ContactDialog open={contactOpen} setOpen={setContactOpen} />
       <ShareDialog open={shareOpen} setOpen={setShareOpen} />
-      <LoginScreen open={loginOpen} setOpen={setLoginOpen} />
+      <LoginScreen open={loginOpen} setOpen={setLoginOpen} onSuccess={setAuthNotice} />
       <SyncConflictDialog conflict={sync.conflict} onResolve={sync.resolveConflict} />
     </div>
   );
