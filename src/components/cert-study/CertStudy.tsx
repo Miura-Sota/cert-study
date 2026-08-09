@@ -134,10 +134,6 @@ export default function CertStudy() {
 
         {saveErr && <p className="rm-note rm-bad" style={{ marginTop: 12 }}>{saveErr}</p>}
 
-        {authNotice && (
-          <p className="rm-note rm-good" role="status" style={{ marginTop: 12 }}>{authNotice}</p>
-        )}
-
         {sync.status === "offline" && (
           <p className="rm-note rm-bad" style={{ marginTop: 12 }}>
             クラウドと同期できていません。記録はこの端末に保存されています。通信が戻ると自動で同期します。
@@ -174,6 +170,22 @@ export default function CertStudy() {
       <ShareDialog open={shareOpen} setOpen={setShareOpen} />
       <LoginScreen open={loginOpen} setOpen={setLoginOpen} onSuccess={setAuthNotice} />
       <SyncConflictDialog conflict={sync.conflict} onResolve={sync.resolveConflict} />
+
+      {authNotice && (
+        <div className="rm-toast" role="status">
+          <CheckIcon />
+          {authNotice}
+        </div>
+      )}
     </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="10" fill="#3AC98B" />
+      <path d="M5.5 10.3l3 3 6-6.6" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
